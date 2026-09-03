@@ -4,7 +4,7 @@ export default function HandoffScreen({ nextPlayerLabel, onContinue }) {
       <h2>Pass the device to {nextPlayerLabel}</h2>
       <p className="hint">Make sure the other player isn't looking!</p>
       <button className="continue-btn" onClick={onContinue}>
-        I'm ready
+        I'm Ready
       </button>
     </div>
   );
