@@ -1,50 +1,51 @@
-import mongoose from 'mongoose';
+import { pool } from '../config/db.js';
 
-const roundSchema = new mongoose.Schema(
-  {
-    roundNumber: { type: Number, required: true },
-    p1Choice: {
-      type: String,
-      required: true,
-      enum: ['stone', 'paper', 'scissors'],
-    },
-    p2Choice: {
-      type: String,
-      required: true,
-      enum: ['stone', 'paper', 'scissors'],
-    },
-    result: {
-      type: String,
-      required: true,
-      enum: ['p1', 'p2', 'tie'],
-    },
-  },
-  { _id: false }
-);
+export async function createGame({ player1Name, player2Name, rounds, finalScore, winner }) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-const gameSchema = new mongoose.Schema(
-  {
-    player1Name: { type: String, required: true, trim: true },
-    player2Name: { type: String, required: true, trim: true },
-    rounds: {
-      type: [roundSchema],
-      validate: {
-        validator: (arr) => arr.length === 6,
-        message: 'A game must have exactly 6 rounds',
-      },
-    },
-    finalScore: {
-      p1: { type: Number, required: true },
-      p2: { type: Number, required: true },
-      ties: { type: Number, required: true },
-    },
-    winner: {
-      type: String,
-      required: true,
-      enum: ['p1', 'p2', 'tie'],
-    },
-  },
-  { timestamps: true }
-);
+    const gameResult = await client.query(
+      `INSERT INTO games (player1_name, player2_name, score_p1, score_p2, score_ties, winner)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [player1Name, player2Name, finalScore.p1, finalScore.p2, finalScore.ties, winner]
+    );
+    const game = gameResult.rows[0];
 
-export default mongoose.model('Game', gameSchema);
+    for (const round of rounds) {
+      await client.query(
+        `INSERT INTO rounds (game_id, round_number, p1_choice, p2_choice, result)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [game.id, round.roundNumber, round.p1Choice, round.p2Choice, round.result]
+      );
+    }
+
+    await client.query('COMMIT');
+    return game;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getAllGames() {
+  const result = await pool.query(
+    `SELECT * FROM games ORDER BY created_at DESC`
+  );
+  return result.rows;
+}
+
+export async function getGameById(id) {
+  const gameResult = await pool.query(`SELECT * FROM games WHERE id = $1`, [id]);
+  if (gameResult.rows.length === 0) return null;
+
+  const roundsResult = await pool.query(
+    `SELECT * FROM rounds WHERE game_id = $1 ORDER BY round_number ASC`,
+    [id]
+  );
+
+  return { ...gameResult.rows[0], rounds: roundsResult.rows };
+}

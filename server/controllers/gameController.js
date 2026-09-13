@@ -1,6 +1,6 @@
-import Game from '../model/Game.js';
+import { createGame, getAllGames, getGameById } from '../model/Game.js';
 
-export async function createGame(req, res) {
+export async function postGame(req, res) {
   try {
     const { player1Name, player2Name, rounds, finalScore, winner } = req.body;
 
@@ -8,14 +8,7 @@ export async function createGame(req, res) {
       return res.status(400).json({ error: 'Missing required game fields' });
     }
 
-    const game = await Game.create({
-      player1Name,
-      player2Name,
-      rounds,
-      finalScore,
-      winner,
-    });
-
+    const game = await createGame({ player1Name, player2Name, rounds, finalScore, winner });
     res.status(201).json(game);
   } catch (err) {
     console.error('Error saving game:', err);
@@ -25,7 +18,7 @@ export async function createGame(req, res) {
 
 export async function getGames(req, res) {
   try {
-    const games = await Game.find().sort({ createdAt: -1 });
+    const games = await getAllGames();
     res.json(games);
   } catch (err) {
     console.error('Error fetching games:', err);
@@ -33,9 +26,9 @@ export async function getGames(req, res) {
   }
 }
 
-export async function getGameById(req, res) {
+export async function getGame(req, res) {
   try {
-    const game = await Game.findById(req.params.id);
+    const game = await getGameById(req.params.id);
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
     }

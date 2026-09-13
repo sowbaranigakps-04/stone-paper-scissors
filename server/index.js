@@ -1,10 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { connectDB } from './config/db.js';
+import { testConnection } from './config/db.js';
 import gamesRouter from './routes/gameRoutes.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,7 +18,7 @@ app.get('/', (req, res) => {
 
 async function start() {
   try {
-    await connectDB();
+    await testConnection();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

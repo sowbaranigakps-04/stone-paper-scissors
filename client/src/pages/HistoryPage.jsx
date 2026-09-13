@@ -36,23 +36,23 @@ export default function HistoryPage() {
 
         <div className="history-list">
           {games.map((game) => (
-            <div className="history-item" key={game._id}>
+            <div className="history-item" key={game.id}>
               <p className="history-names">
-                {game.player1Name} vs {game.player2Name}
+                {game.player1_name} vs {game.player2_name}
               </p>
               <p className="history-score">
-                Rounds won - {game.player1Name}: {game.finalScore.p1}, {game.player2Name}: {game.finalScore.p2}, Tied: {game.finalScore.ties}
+                Rounds won - {game.player1_name}: {game.score_p1}, {game.player2_name}: {game.score_p2}, Tied: {game.score_ties}
               </p>
               <p className="history-winner">
                 Winner:{' '}
                 {game.winner === 'tie'
                   ? 'Tie'
                   : game.winner === 'p1'
-                  ? game.player1Name
-                  : game.player2Name}
+                  ? game.player1_name
+                  : game.player2_name}
               </p>
               <p className="history-date">
-                {new Date(game.createdAt).toLocaleString()}
+                {new Date(game.created_at).toLocaleString()}
               </p>
             </div>
           ))}

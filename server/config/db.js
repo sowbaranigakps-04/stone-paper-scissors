@@ -1,12 +1,14 @@
-import mongoose from 'mongoose';
+import pg from 'pg';
 
-export async function connectDB() {
-  const uri = process.env.MONGO_URI;
+const { Pool } = pg;
 
-  if (!uri) {
-    throw new Error('MONGO_URI is not set in environment variables');
-  }
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
 
-  await mongoose.connect(uri);
-  console.log('MongoDB connected');
+export async function testConnection() {
+  const client = await pool.connect();
+  console.log('PostgreSQL connected');
+  client.release();
 }
